@@ -1,7 +1,8 @@
-typing-extensions
-streamlink
 gradio
-tiktoken
-ultralytics
-pillow
 innertube
+opencv-python
+pillow
+streamlink
+tiktoken
+typing-extensions
+ultralytics
