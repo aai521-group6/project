@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional
 os.system("python3 -m pip uninstall -y typing-extensions")
 os.system("python3 -m pip install -U typing-extensions")
 os.system(
-    "python3 -m pip install -q --progress-bar off streamlink gradio tiktoken ultralytics pillow innertube"
+    "python3 -m pip install -q --progress-bar off streamlink gradio tiktoken ultralytics pillow innertube opencv-python"
 )
 import cv2
 import gradio as gr
