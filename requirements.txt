@@ -1,1 +1,7 @@
-streamlit
+typing-extensions
+streamlink
+gradio
+tiktoken
+ultralytics
+pillow
+innertube
