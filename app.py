@@ -112,7 +112,20 @@ class SearchService:
             return None
 
 
-class LiveStreamAnnotator:
+INITIAL_STREAMS = []
+for result in SearchService.search("world live cams", SearchFilter.LIVE):
+    INITIAL_STREAMS.append(
+        {
+            "thumbnail_url": result["thumbnail_urls"][-1]
+            if result["thumbnail_urls"]
+            else "",
+            "title": result["title"],
+            "video_id": result["video_id"],
+            "label": result["video_id"],
+        }
+    )
+
+class YouTubeObjectDetection:
     def __init__(self):
         logging.getLogger().setLevel(logging.DEBUG)
         self.model = YOLO("yolov8x.pt")
@@ -121,7 +134,7 @@ class LiveStreamAnnotator:
             "open-sans.zip",
         )
         self.current_page_token = None
-        self.streams = self.fetch_live_streams("world live cams")
+        self.streams = INITIAL_STREAMS
         # Gradio UI Elements
         initial_gallery_items = [
             (stream["thumbnail_url"], stream["title"]) for stream in self.streams
@@ -129,16 +142,17 @@ class LiveStreamAnnotator:
         self.gallery = gr.Gallery(
             label="Live YouTube Videos",
             value=initial_gallery_items,
-            show_label=False,
+            show_label=True,
             columns=[3],
             rows=[10],
             object_fit="contain",
             height="auto",
+            allow_preview=False,
         )
         self.search_input = gr.Textbox(label="Search Live YouTube Videos")
         self.stream_input = gr.Textbox(label="URL of Live YouTube Video")
         self.output_image = gr.AnnotatedImage(show_label=False)
-        self.search_button = gr.Button("Search")
+        self.search_button = gr.Button("Search", size="lg")
         self.submit_button = gr.Button("Detect Objects", variant="primary", size="lg")
         self.prev_page_button = gr.Button("Previous Page", interactive=False)
         self.next_page_button = gr.Button("Next Page", interactive=False)
@@ -198,7 +212,7 @@ class LiveStreamAnnotator:
         error_image = np.zeros((1920, 1080, 3), dtype=np.uint8)
         pil_image = Image.fromarray(error_image)
         draw = ImageDraw.Draw(pil_image)
-        font = ImageFont.truetype("/usr/share/fonts/open-sans/OpenSans-Regular.ttf", 24)
+        font = ImageFont.truetype(self.font_path, 24)
         text_size = draw.textsize(message, font=font)
         position = ((1920 - text_size[0]) // 2, (1080 - text_size[1]) // 2)
         draw.text(position, message, (0, 0, 255), font=font)
@@ -232,16 +246,17 @@ class LiveStreamAnnotator:
                 "<center><h1><b>Object Detection in Live YouTube Streams</b></h1></center>"
             )
             with gr.Column():
-                self.stream_input.render()
                 with gr.Group():
-                    self.output_image.render()
-                    self.submit_button.render()
+                    with gr.Row():
+                        self.stream_input.render()
+                        self.submit_button.render()
+                self.output_image.render()
             with gr.Group():
                 with gr.Row():
                     self.search_input.render()
                     self.search_button.render()
-                with gr.Row():
-                    self.gallery.render()
+            with gr.Row():
+                self.gallery.render()
 
             @self.gallery.select(
                 inputs=None, outputs=[self.output_image, self.stream_input]
@@ -274,7 +289,7 @@ class LiveStreamAnnotator:
             def annotate_stream(url):
                 return self.capture_frame(url)
 
-        app.queue().launch(show_api=False)
+        return app.queue().launch(show_api=False)
 
 if __name__ == "__main__":
-    LiveStreamAnnotator().render()
+    YouTubeObjectDetection().render()
