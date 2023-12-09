@@ -118,7 +118,7 @@ class LiveStreamAnnotator:
         self.model = YOLO("yolov8x.pt")
         self.font_path = self.download_font(
             "https://www.fontsquirrel.com/fonts/download/open-sans",
-            "/content/open-sans.zip",
+            "open-sans.zip",
         )
         self.current_page_token = None
         self.streams = self.fetch_live_streams("world live cams")
