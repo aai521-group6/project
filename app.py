@@ -41,37 +41,18 @@ class SearchService:
     @staticmethod
     def parse(data: Dict[str, Any]) -> List[Dict[str, Any]]:
         results = []
-        items = []
-
-        contents = (
-            data.get("contents", {})
-            .get("twoColumnSearchResultsRenderer", {})
-            .get("primaryContents", {})
-            .get("sectionListRenderer", {})
-            .get("contents", [])
-        )
-        if contents:
-            items = contents[0].get("itemSectionRenderer", {}).get("contents", [])
-
+        contents = data["contents"]["twoColumnSearchResultsRenderer"]["primaryContents"]["sectionListRenderer"]["contents"]
+        items = contents[0]["itemSectionRenderer"]["contents"] if contents else []
         for item in items:
             if "videoRenderer" in item:
                 renderer = item["videoRenderer"]
-                video_id = renderer.get("videoId", "")
-                thumbnail_urls = [
-                    thumb.get("url", "")
-                    for thumb in renderer.get("thumbnail", {}).get("thumbnails", [])
-                ]
-                title_text = "".join(
-                    [
-                        run.get("text", "")
-                        for run in renderer.get("title", {}).get("runs", [])
-                    ]
-                )
-
+                video_id = renderer["videoId"]
+                title = "".join(run["text"] for run in renderer["title"]["runs"])
+                thumbnail_url = renderer["thumbnail"]["thumbnails"][-1]["url"]
                 result = {
                     "video_id": video_id,
-                    "thumbnail_urls": thumbnail_urls,
-                    "title": title_text,
+                    "thumbnail_url": thumbnail_url,
+                    "title": title,
                 }
                 results.append(result)
 
@@ -104,20 +85,7 @@ class SearchService:
             logging.warning(f"An error occurred: {e}")
             return None
 
-
-INITIAL_STREAMS = []
-for result in SearchService.search("world live cams", SearchFilter.LIVE):
-    INITIAL_STREAMS.append(
-        {
-            "thumbnail_url": result["thumbnail_urls"][-1]
-            if result["thumbnail_urls"]
-            else "",
-            "title": result["title"],
-            "video_id": result["video_id"],
-            "label": result["video_id"],
-        }
-    )
-
+INITIAL_STREAMS = SearchService.search("world live cams", SearchFilter.LIVE)
 class YouTubeObjectDetection:
     def __init__(self):
         logging.getLogger().setLevel(logging.DEBUG)
@@ -131,21 +99,14 @@ class YouTubeObjectDetection:
 
         # Gradio UI Elements
         initial_gallery_items = [(stream["thumbnail_url"], stream["title"]) for stream in self.streams]
-        self.gallery = gr.Gallery(
-            label="Live YouTube Videos",
-            value=initial_gallery_items,
-            show_label=True,
-            columns=[3],
-            rows=[10],
-            object_fit="contain",
-            height="auto",
-            allow_preview=False,
-        )
+        self.gallery = gr.Gallery(label="Live YouTube Videos", value=initial_gallery_items, show_label=True, columns=[3], rows=[10], object_fit="contain", height="auto", allow_preview=False)
         self.search_input = gr.Textbox(label="Search Live YouTube Videos")
         self.stream_input = gr.Textbox(label="URL of Live YouTube Video")
         self.annotated_image = gr.AnnotatedImage(show_label=False)
         self.search_button = gr.Button("Search", size="lg")
         self.submit_button = gr.Button("Detect Objects", variant="primary", size="lg")
+        self.page_title = gr.HTML("<center><h1><b>Object Detection in Live YouTube Streams</b></h1></center>")
+
 
     @staticmethod
     def download_font(url, save_path):
@@ -157,7 +118,7 @@ class YouTubeObjectDetection:
     def capture_frame(self, url):
         stream_url = SearchService.get_stream_url(url)
         if not stream_url:
-            return self.create_error_image("No stream found"), []
+            return [], []
         frame = self.get_frame(stream_url)
         if frame is None:
             return self.create_error_image("Failed to capture frame"), []
@@ -195,8 +156,7 @@ class YouTubeObjectDetection:
                 annotations.append((bbox, class_name))
         return annotations
 
-    @staticmethod
-    def create_error_image(message):
+    def create_error_image(self, message):
         error_image = np.zeros((1920, 1080, 3), dtype=np.uint8)
         pil_image = Image.fromarray(error_image)
         draw = ImageDraw.Draw(pil_image)
@@ -214,8 +174,7 @@ class YouTubeObjectDetection:
                 streams.append(
                     {
                         "thumbnail_url": result["thumbnail_urls"][0]
-                        if result["thumbnail_urls"]
-                        else "",
+                        if result["thumbnail_urls"] else "",
                         "title": result["title"],
                         "video_id": result["video_id"],
                         "label": result["video_id"],
@@ -224,13 +183,8 @@ class YouTubeObjectDetection:
         return streams
 
     def render(self):
-        with gr.Blocks(
-            title="Object Detection in Live YouTube Streams",
-            css="footer {visibility: hidden}",
-        ) as app:
-            gr.HTML(
-                "<center><h1><b>Object Detection in Live YouTube Streams</b></h1></center>"
-            )
+        with gr.Blocks(title="Object Detection in Live YouTube Streams", css="footer {visibility: hidden}") as app:
+            self.page_title.render()
             with gr.Column():
                 with gr.Group():
                     with gr.Row():
@@ -244,16 +198,12 @@ class YouTubeObjectDetection:
             with gr.Row():
                 self.gallery.render()
 
-            @self.gallery.select(
-                inputs=None, outputs=[self.annotated_image, self.stream_input]
-            )
+            @self.gallery.select(inputs=None, outputs=[self.annotated_image, self.stream_input])
             def on_gallery_select(evt: gr.SelectData):
                 selected_index = evt.index
                 if selected_index is not None and selected_index < len(self.streams):
                     selected_stream = self.streams[selected_index]
-                    stream_url = SearchService.get_youtube_url(
-                        selected_stream["video_id"]
-                    )
+                    stream_url = SearchService.get_youtube_url(selected_stream["video_id"])
                     frame_output = self.capture_frame(stream_url)
                     return frame_output, stream_url
                 return None, ""
@@ -261,17 +211,14 @@ class YouTubeObjectDetection:
             @self.search_button.click(inputs=[self.search_input], outputs=[self.gallery])
             def on_search_click(query):
                 self.streams = self.fetch_live_streams(query)
-                gallery_items = [
-                    (stream["thumbnail_url"], stream["title"])
-                    for stream in self.streams
-                ]
+                gallery_items = [(stream["thumbnail_url"], stream["title"]) for stream in self.streams]
                 return gallery_items
 
             @self.submit_button.click(inputs=[self.stream_input], outputs=[self.annotated_image])
             def annotate_stream(url):
                 return self.capture_frame(url)
 
-        return app.queue().launch(show_api=False)
+        return app.queue().launch(show_api=False, debug=True, quiet=False, share=False)
 
 if __name__ == "__main__":
     YouTubeObjectDetection().render()
