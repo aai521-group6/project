@@ -4,12 +4,6 @@ import sys
 import zipfile
 from enum import Enum
 from typing import Any, Dict, List, Optional
-
-os.system("python3 -m pip uninstall -y typing-extensions")
-os.system("python3 -m pip install -U typing-extensions")
-os.system(
-    "python3 -m pip install -q --progress-bar off streamlink gradio tiktoken ultralytics pillow innertube opencv-python"
-)
 import cv2
 import gradio as gr
 import innertube
@@ -33,7 +27,6 @@ class SearchFilter(Enum):
 
     def __str__(self):
         return self.human_readable
-
 
 class SearchService:
     @staticmethod
@@ -135,10 +128,9 @@ class YouTubeObjectDetection:
         )
         self.current_page_token = None
         self.streams = INITIAL_STREAMS
+
         # Gradio UI Elements
-        initial_gallery_items = [
-            (stream["thumbnail_url"], stream["title"]) for stream in self.streams
-        ]
+        initial_gallery_items = [(stream["thumbnail_url"], stream["title"]) for stream in self.streams]
         self.gallery = gr.Gallery(
             label="Live YouTube Videos",
             value=initial_gallery_items,
@@ -151,11 +143,9 @@ class YouTubeObjectDetection:
         )
         self.search_input = gr.Textbox(label="Search Live YouTube Videos")
         self.stream_input = gr.Textbox(label="URL of Live YouTube Video")
-        self.output_image = gr.AnnotatedImage(show_label=False)
+        self.annotated_image = gr.AnnotatedImage(show_label=False)
         self.search_button = gr.Button("Search", size="lg")
         self.submit_button = gr.Button("Detect Objects", variant="primary", size="lg")
-        self.prev_page_button = gr.Button("Previous Page", interactive=False)
-        self.next_page_button = gr.Button("Next Page", interactive=False)
 
     @staticmethod
     def download_font(url, save_path):
@@ -183,9 +173,7 @@ class YouTubeObjectDetection:
             if ret:
                 return cv2.resize(frame, (1920, 1080))
             else:
-                logging.warning(
-                    "Unable to process the HLS stream with cv2.VideoCapture."
-                )
+                logging.warning("Unable to process the HLS stream with cv2.VideoCapture.")
                 return None
         except Exception as e:
             logging.warning(f"An error occurred while capturing the frame: {e}")
@@ -220,9 +208,7 @@ class YouTubeObjectDetection:
 
     def fetch_live_streams(self, query=""):
         streams = []
-        results = SearchService.search(
-            query if query else "world live cams", SearchFilter.LIVE
-        )
+        results = SearchService.search(query if query else "world live cams", SearchFilter.LIVE)
         for result in results:
             if "video_id" in result and "thumbnail_urls" in result:
                 streams.append(
@@ -250,7 +236,7 @@ class YouTubeObjectDetection:
                     with gr.Row():
                         self.stream_input.render()
                         self.submit_button.render()
-                self.output_image.render()
+                self.annotated_image.render()
             with gr.Group():
                 with gr.Row():
                     self.search_input.render()
@@ -259,7 +245,7 @@ class YouTubeObjectDetection:
                 self.gallery.render()
 
             @self.gallery.select(
-                inputs=None, outputs=[self.output_image, self.stream_input]
+                inputs=None, outputs=[self.annotated_image, self.stream_input]
             )
             def on_gallery_select(evt: gr.SelectData):
                 selected_index = evt.index
@@ -272,9 +258,7 @@ class YouTubeObjectDetection:
                     return frame_output, stream_url
                 return None, ""
 
-            @self.search_button.click(
-                inputs=[self.search_input], outputs=[self.gallery]
-            )
+            @self.search_button.click(inputs=[self.search_input], outputs=[self.gallery])
             def on_search_click(query):
                 self.streams = self.fetch_live_streams(query)
                 gallery_items = [
@@ -283,9 +267,7 @@ class YouTubeObjectDetection:
                 ]
                 return gallery_items
 
-            @self.submit_button.click(
-                inputs=[self.stream_input], outputs=[self.output_image]
-            )
+            @self.submit_button.click(inputs=[self.stream_input], outputs=[self.annotated_image])
             def annotate_stream(url):
                 return self.capture_frame(url)
 
