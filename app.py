@@ -274,9 +274,7 @@ class LiveStreamAnnotator:
             def annotate_stream(url):
                 return self.capture_frame(url)
 
-        app.queue().launch(
-            share=True, debug=True, quiet=True, show_api=False, height=800
-        )
+        app.queue().launch(show_api=False)
 
 if __name__ == "__main__":
     LiveStreamAnnotator().render()
