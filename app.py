@@ -147,9 +147,8 @@ class LiveStreamAnnotator:
     def download_font(url, save_path):
         os.system(f"wget {url} -O {save_path}")
         with zipfile.ZipFile(save_path, "r") as zip_ref:
-            font_dir = "/usr/share/fonts/open-sans"
-            zip_ref.extractall(font_dir)
-        return os.path.join(font_dir, "OpenSans-Regular.ttf")
+            zip_ref.extractall(".")
+        return os.path.join(".", "OpenSans-Regular.ttf")
 
     def capture_frame(self, url):
         stream_url = SearchService.get_stream_url(url)
@@ -279,5 +278,5 @@ class LiveStreamAnnotator:
             share=True, debug=True, quiet=True, show_api=False, height=800
         )
 
-
-LiveStreamAnnotator().render()
+if __name__ == "__main__":
+    LiveStreamAnnotator().render()
