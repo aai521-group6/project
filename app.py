@@ -252,7 +252,16 @@ class LiveYouTubeObjectDetector:
     def __init__(self):
         """Initializes the LiveYouTubeObjectDetector with YOLO model and UI components."""
         logging.getLogger().setLevel(logging.DEBUG)
-        self.model = YOLO("yolov8x.pt")
+        model_url = "https://huggingface.co/aai521-group6/yolov8x-coco/resolve/main/yolov8x-coco.pt?download=true"
+        local_model_path = "yolov8x-coco.pt"
+        response = requests.get(model_url)
+        if response.status_code == 200:
+            with open(local_model_path, "wb") as f:
+                f.write(response.content)
+            print("Model downloaded successfully.")
+        else:
+            raise Exception(f"Failed to download model: Status code {response.status_code}")
+        self.model = YOLO(local_model_path)
         self.streams = INITIAL_STREAMS
 
         # Gradio UI
