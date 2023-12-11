@@ -39,8 +39,6 @@ from ultralytics import YOLO
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
-model = YOLO("yolov8x.pt")
-
 
 class SearchFilter(Enum):
     """
@@ -59,6 +57,7 @@ class SearchFilter(Enum):
     used in YouTube search queries, and the second element is a human-readable
     string describing the filter.
     """
+
     LIVE = ("EgJAAQ%3D%3D", "Live")
     VIDEO = ("EgIQAQ%3D%3D", "Video")
 
@@ -99,6 +98,7 @@ class SearchService:
         get_youtube_url: Constructs a YouTube URL for a given video ID.
         get_stream: Retrieves the stream URL for a given YouTube video URL.
     """
+
     @staticmethod
     def search(query: Optional[str], filter: SearchFilter = SearchFilter.VIDEO):
         """Searches YouTube for videos matching the given query and filter.
@@ -190,6 +190,8 @@ class SearchService:
 
 
 INITIAL_STREAMS = SearchService.search("world live cams", SearchFilter.LIVE)
+
+
 class LiveYouTubeObjectDetector:
     """
     LiveYouTubeObjectDetector is a class that integrates object detection into live YouTube streams.
@@ -219,6 +221,7 @@ class LiveYouTubeObjectDetector:
         get_live_streams: Searches for live streams based on a query.
         render: Sets up and launches the Gradio interface.
     """
+
     def __init__(self):
         """Initializes the LiveYouTubeObjectDetector with YOLO model and UI components."""
         logging.getLogger().setLevel(logging.DEBUG)
@@ -343,7 +346,7 @@ class LiveYouTubeObjectDetector:
         The Gradio interface allows users to search for live YouTube streams, select a stream,
         and run object detection on the selected live stream.
         """
-        with gr.Blocks(title="Object Detection in Live YouTube Streams", css="footer {visibility: hidden}") as app:
+        with gr.Blocks(title="Object Detection in Live YouTube Streams", css="footer {visibility: hidden}", analytics_enabled=False) as app:
             self.page_title.render()
             with gr.Column():
                 with gr.Group():
