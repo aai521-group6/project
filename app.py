@@ -215,7 +215,6 @@ class LiveYouTubeObjectDetector:
         detect_objects: Detects objects in a live YouTube stream given its URL.
         get_frame: Captures a frame from a live stream URL.
         annotate: Annotates a frame with detected objects.
-        get_annotations: Converts YOLO detection results into annotations for Gradio.
         create_black_image: Creates a black placeholder image.
         get_live_streams: Searches for live streams based on a query.
         render: Sets up and launches the Gradio interface.
@@ -281,7 +280,7 @@ class LiveYouTubeObjectDetector:
 
     def annotate(self, frame: np.ndarray) -> Tuple[Image.Image, List[Tuple[Tuple[int, int, int, int], str]]]:
         """
-        Annotates the given frame with detected objects.
+        Annotates the given frame with detected objects and their bounding boxes.
 
         :param frame: The frame to be annotated.
         :type frame: np.ndarray
@@ -290,22 +289,6 @@ class LiveYouTubeObjectDetector:
         """
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         results = self.model(frame_rgb)
-        annotations = self.get_annotations(results)
-        return Image.fromarray(frame_rgb), annotations
-
-    def get_annotations(self, results) -> List[Tuple[Tuple[int, int, int, int], str]]:
-        """
-        Converts YOLO detection results into annotations suitable for Gradio visualization.
-
-        This method processes the results from the YOLO object detection model, extracting
-        the bounding box coordinates and class names for each detected object.
-
-        :param results: The detection results from the YOLO model.
-        :type results: List[DetectionResult]
-        :return: A list of tuples, each containing the bounding box (as a tuple of integers)
-                 and the class name of the detected object.
-        :rtype: List[Tuple[Tuple[int, int, int, int], str]]
-        """
         annotations = []
         for result in results:
             for box in result.boxes:
@@ -315,7 +298,8 @@ class LiveYouTubeObjectDetector:
                 x1, y1, x2, y2 = box.xyxy[0]
                 bbox_coords = (int(x1), int(y1), int(x2), int(y2))
                 annotations.append((bbox_coords, class_name))
-        return annotations
+
+        return Image.fromarray(frame_rgb), annotations
 
     @staticmethod
     def create_black_image():
@@ -374,7 +358,7 @@ class LiveYouTubeObjectDetector:
             with gr.Row():
                 self.gallery.render()
 
-            @self.gallery.select(inputs=None, outputs=[self.annotated_image, self.stream_input])
+            @self.gallery.select(inputs=None, outputs=[self.annotated_image, self.stream_input], scroll_to_output=True)
             def detect_objects_from_gallery_item(evt: gr.SelectData):
                 if evt.index is not None and evt.index < len(self.streams):
                     selected_stream = self.streams[evt.index]
