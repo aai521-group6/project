@@ -1,3 +1,23 @@
+---
+title: "Real-time Object Detection in YouTube Streams"
+emoji: 🎥
+colorFrom: blue
+colorTo: green
+sdk: gradio
+python_version: "3.8"
+sdk_version: "4.7.1"
+app_file: "app.py"
+tags:
+  - live-video
+  - object-detection
+  - YOLO
+  - YouTube
+  - gradio
+models:
+  - yolov8x
+datasets:
+  - HuggingFaceM4/COCO
+---
 # Object Detection in Live YouTube Streams
 
 ## Project Status: Active
