@@ -1,5 +1,5 @@
 ---
-title: "Real-time Object Detection in YouTube Streams"
+title: "Object Detection in Live YouTube Streams"
 emoji: 🎥
 colorFrom: blue
 colorTo: green
