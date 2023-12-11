@@ -25,17 +25,44 @@ Run this file to launch the Gradio interface, which allows users to input search
 
 """
 import logging
+import os
+import subprocess
 import sys
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 
-import cv2
-import gradio as gr
-import innertube
-import numpy as np
-import streamlink
-from PIL import Image
-from ultralytics import YOLO
+import requests
+
+
+def install_requirements():
+    requirements_url = "https://raw.githubusercontent.com/aai521-group6/project/main/requirements.txt"
+    response = requests.get(requirements_url)
+    if response.status_code == 200:
+        with open("requirements.txt", "wb") as file:
+            file.write(response.content)
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
+    else:
+        raise Exception("Failed to download requirements.txt")
+
+
+try:
+    import cv2
+    import gradio as gr
+    import innertube
+    import numpy as np
+    import streamlink
+    from PIL import Image
+    from ultralytics import YOLO
+except ImportError:
+    install_requirements()
+    import cv2
+    import gradio as gr
+    import innertube
+    import numpy as np
+    import streamlink
+    from PIL import Image
+    from ultralytics import YOLO
+
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
