@@ -52,7 +52,7 @@ try:
     import numpy as np
     import streamlink
     from PIL import Image
-    from ultralytics import YOLO
+    from super_gradients.training import models
 except ImportError:
     install_requirements()
     import cv2
@@ -61,7 +61,7 @@ except ImportError:
     import numpy as np
     import streamlink
     from PIL import Image
-    from ultralytics import YOLO
+    from super_gradients.training import models
 
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
@@ -252,16 +252,7 @@ class LiveYouTubeObjectDetector:
     def __init__(self):
         """Initializes the LiveYouTubeObjectDetector with YOLO model and UI components."""
         logging.getLogger().setLevel(logging.DEBUG)
-        model_url = "https://huggingface.co/aai521-group6/yolov8x-coco/resolve/main/yolov8x-coco.pt?download=true"
-        local_model_path = "yolov8x-coco.pt"
-        response = requests.get(model_url)
-        if response.status_code == 200:
-            with open(local_model_path, "wb") as f:
-                f.write(response.content)
-            print("Model downloaded successfully.")
-        else:
-            raise Exception(f"Failed to download model: Status code {response.status_code}")
-        self.model = YOLO(local_model_path)
+        self.model = models.get("yolo_nas_l", pretrained_weights="coco")
         self.streams = INITIAL_STREAMS
 
         # Gradio UI
@@ -327,16 +318,15 @@ class LiveYouTubeObjectDetector:
         :rtype: Tuple[Image.Image, List[Tuple[Tuple[int, int, int, int], str]]]
         """
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        results = self.model(frame_rgb)
+        predictions = self.model.predict(frame_rgb)
         annotations = []
-        for result in results:
-            for box in result.boxes:
-                class_id = int(box.cls[0])
-                class_name = result.names[class_id]
-                # EXTRACT BOUNDING BOX AND CONVERT TO INTEGER
-                x1, y1, x2, y2 = box.xyxy[0]
-                bbox_coords = (int(x1), int(y1), int(x2), int(y2))
-                annotations.append((bbox_coords, class_name))
+        result = predictions._images_prediction_lst[0]
+
+        for bbox, label in zip(result.prediction.bboxes_xyxy, result.prediction.labels):
+            x1, y1, x2, y2 = bbox
+            class_name = result.class_names[int(label)]
+            bbox_coords = (int(x1), int(y1), int(x2), int(y2))
+            annotations.append((bbox_coords, class_name))
 
         return Image.fromarray(frame_rgb), annotations
 
@@ -416,7 +406,7 @@ class LiveYouTubeObjectDetector:
             def detect_objects_from_url(url):
                 return self.detect_objects(url)
 
-        return app.queue().launch(show_api=False)
+        return app.queue().launch(show_api=False, debug=True)
 
 
 if __name__ == "__main__":
