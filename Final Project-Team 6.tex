@@ -190,82 +190,36 @@ To compute these metrics, we used YOLOv8's validation mode. This process involve
 
 \section{Model Results}
 
-During validation, our model's capabilities were put to the test across three distinct environments, each presenting unique challenges for object detection.
-
-\subsection{Diverse Environments and Object Interactions}
-
-The first environment captured a varied urban setting with objects like trains, handbags, and even animals like elephants and zebras. Despite the complexity, the model showed robust detection capabilities. However, the precision varied among objects with simpler shapes and distinct colors being identified more accurately than others, as shown in Figure \ref{fig:urban_setting}.
+During tests, our model identified objects in several settings. It picked out everyday items like trains and handbags, along with animals such as elephants and zebras, in an urban scene. The model worked well with objects that stood out in shape and color. In a beach scene, the model distinguished between still objects and those in motion like airplanes and trains. It also spotted smaller items, like kites. This shows the model's range in detecting objects of different sizes. Lastly, the model handled a mix of moving and stationary objects. It detected them with a reasonable degree of accuracy, proving it can work in various conditions. The tests showed the model's ability to detect objects consistently.
 
 \begin{figure}[H]
-\centering
-\includegraphics[width=0.8\textwidth]{images/val_batch0_pred.jpg}
-\caption{Object detection in a diverse urban setting with a range of static and dynamic objects.}
-\label{fig:urban_setting}
+    \centering
+    \includegraphics[width=0.6\textwidth]{images/val_batch0_pred.jpg}
+    \\
+    \includegraphics[width=0.6\textwidth]{images/val_batch1_pred.jpg}
+    \\
+    \includegraphics[width=0.6\textwidth]{images/val_batch2_pred.jpg}
+    \label{fig:combined_environments}
 \end{figure}
 
-The second environment displayed a mix of natural and artificial elements, from beaches with surfboards to trains and airplanes. The model effectively distinguished between stationary and moving objects, showing versatility. Notably, it was able to detect smaller objects like kites, suggesting good performance on objects with less area, as depicted in Figure \ref{fig:natural_artificial}.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.8\textwidth]{images/val_batch1_pred.jpg}
-\caption{Object detection capturing a mix of natural and artificial elements.}
-\label{fig:natural_artificial}
-\end{figure}
-
-The third environment was particularly challenging, featuring objects in motion such as airplanes, cars, and various animals. The model demonstrated a strong ability to track movement and offer clear detections, which is crucial for potential applications like traffic monitoring and wildlife surveillance, as illustrated in Figure \ref{fig:moving_objects}.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.8\textwidth]{images/val_batch2_pred.jpg}
-\caption{Object detection in dynamic scenes with moving objects and animals.}
-\label{fig:moving_objects}
-\end{figure}
 
 \subsection{Graphs}
 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/results.png}
+    \end{figure}
+
+The provided results from our model training over three epochs presents an encouraging trend of performance enhancement across various parameters. The 'Box Loss' graphs for both training and validation indicate a steady decline, which signifies an improvement in the model's ability to predict the correct bounding boxes around objects. A lower box loss correlates to a higher accuracy in locating the objects within the images.
+
+Similarly, the 'Class Loss' for training and validation shows a downward slope, reflecting the model's growing competence in correctly classifying the objects. Lower classification loss means the model is getting better at identifying what the objects are. 'DFL Loss' or Detection Family Loss, which encapsulates several aspects of detection quality, also displays a consistent decrease. This suggests that the model's understanding of object features and their interrelations is maturing, leading to better detection results.
+
+In terms of 'Precision', there is a noticeable upward trend across epochs. Higher precision points to a higher ratio of true positive detections versus false positives, which is crucial for the practical application of the model, ensuring that it is reliable when deployed in real-world scenarios. 'Recall' also exhibits an increasing trend, which is indicative of the model's ability to detect all relevant instances of objects. An increase in recall means that the model is less likely to miss objects that should be detected.
+
+Lastly, the 'mAP' (mean Average Precision) scores, both for mAP50 and mAP50-95, are on the rise. These metrics are particularly important because they provide a single-figure measure of the quality of object detections made by the model, not just in terms of their presence, but also their location and classification across a range of sizes and difficulties. The mAP50 metric shows the model's precision over a 50\% threshold for Intersection over Union (IoU), while mAP50-95 averages mAP calculated at different IoU thresholds, from 50\% to 95\%. The growth in these values suggests that the model is not only improving in recognizing objects but is also doing so with a greater agreement to the ground truth data, which is promising for its application in environments where precision is critical.
+
 During the evaluation of our model, we relied on various performance curves to understand its predictive capabilities and to identify areas for improvement. Below we discuss the significance of the Precision-Recall, Precision-Confidence, F1-Confidence, and Recall-Confidence curves generated during our testing phase. These curves collectively provide a comprehensive view of the model's strengths and weaknesses in terms of its prediction capabilities. They are instrumental in fine-tuning the model to achieve the best performance possible on unseen data.
-
-\subsection{Precision-Recall Curve}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.5\textwidth]{images/PR_curve.png}
-    \caption{Precision-Recall Curve showing model performance at different thresholds.}
-    \label{fig:pr_curve}
-    \end{figure}
-
-The Precision-Recall (PR) Curve in Figure \ref{fig:pr_curve} is a plot that shows the trade-off between precision and recall for different probability thresholds. A high area under the curve (AUC) represents both high recall and high precision, where high precision relates to a low false positive rate, and high recall relates to a low false negative rate. Our model achieved an impressive mAP@0.5, indicating that it can detect objects with high accuracy while maintaining a low rate of false positives.
-
-\subsection{Precision-Confidence Curve}
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.5\textwidth]{images/P_curve.png}
-\caption{Precision-Confidence Curve illustrating the relationship between precision and model confidence.}
-\label{fig:p_curve}
-\end{figure}
-
-The Precision-Confidence Curve in Figure \ref{fig:p_curve} indicates the model's precision at various confidence levels. A high precision across confidence levels suggests that when the model predicts an object class, it does so with a high degree of certainty. This curve is particularly useful for setting a confidence threshold that balances the number of detections with their quality.
-
-\subsection{F1-Confidence Curve}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.5\textwidth]{images/F1_curve.png}
-    \caption{F1-Confidence Curve showing the F1 Score across varying levels of confidence.}
-    \label{fig:f1_curve}
-    \end{figure}
-
-The F1-Confidence Curve in Figure \ref{fig:f1_curve} provides insights into the balance between precision and recall across different confidence thresholds. The F1 score is the harmonic mean of precision and recall, and a higher score indicates a better balance. The model demonstrates a robust performance with an optimal balance at a specific confidence threshold, as indicated by the peak of the curve.
-
-\subsection{Recall-Confidence Curve}
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.5\textwidth]{images/R_curve.png}
-    \caption{Recall-Confidence Curve depicting how recall changes with varying confidence thresholds.}
-    \label{fig:r_curve}
-    \end{figure}
-
-The Recall-Confidence Curve in Figure \ref{fig:r_curve} reveals the model's ability to find all the relevant cases (recall) across different confidence levels. A high recall at a certain threshold indicates that the model can detect the majority of objects without missing many.
 
 \section{Findings}
 
